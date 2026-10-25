@@ -190,7 +190,7 @@
   "playtest_hotkey_unavailable": "Playtest hotkey unavailable",
   "playtest_hotkey_already_registered": "F6 is already registered by another program! Uh oh!",
   "playtest_hotkey_in_game_hint": "NOTE: The F6 hotkey works in-game while a playtest is running!",
-  "help_controls": "Painting: Left-click places, right-click erases\nMiddle mouse click: Eyedropper/picker\nMouse scroll wheel over board: Zoom in or out\nCtrl+Z / Ctrl+Y: Undo/redo\nCtrl+O: Open a level\nCtrl+S: Save the level\nF6: Start playtest/hotload, or hold to stop playtest",
+  "help_controls": "Left mouse button in Paint mode: Place the selected tile or spawn\nRight mouse button in Paint mode: Erase a placement\nMiddle mouse button in Paint mode: Pick a tile or spawn from the board\nLeft mouse button in Inspect mode: Select a placement for editing\nMouse wheel over the board: Zoom\nCtrl+Z/Ctrl+Y: Undo/redo\nCtrl+O: Open a level\nCtrl+S: Save\nF6: Start a playtest or hotload changes\nHold F6: Stop the playtest",
   "about": "About",
   "version_label": "Version {value0}",
   "about_litterbox": "About LitterBox",
