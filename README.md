@@ -77,7 +77,8 @@ Tileset detection uses available map definitions, including those from the selec
 
 NOTE: The playtesting feature may require an update of the editor when the game releases an substantial update, so don't be surprised if this feature remains broken for a while. 
 
-Playtesting also handles the loading of DLL mods, and for that, Mewjector's chainloader (`version.dll` and `chainloader.ini`) must already be installed!
+Playtesting also handles the loading of DLL mods, and for that, [Mewjector](https://www.nexusmods.com/mewgenics/mods/218)'s chainloader (`version.dll` and `chainloader.ini`) must already be installed!
+If you don't already have Mewjector, please install it if you are making levels for mods that require DLL modding! 
 
 ## Running from source
 
