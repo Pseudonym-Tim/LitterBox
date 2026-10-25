@@ -280,7 +280,7 @@ class EditorDialogs:
         ttk.Separator(frame, orient='horizontal').pack(fill='x', pady=(0, 18))
         ttk.Label(frame, text=tr('credits_heading'), font=('Sour Gummy', 14, 'bold')).pack(anchor='w', pady=(0, 8))
 
-        #for credit in ('credit_developer', 'credit_logo', 'credit_game'):
+        for credit in ('credit_developer', 'credit_logo', 'credit_game'):
             ttk.Label(frame, text=tr(credit), wraplength=500, justify='left').pack(anchor='w', pady=2)
 
         icon_button(frame, text=tr('close'), icon='xmark', command=dialog.destroy).pack(anchor='e', pady=(24, 0))
