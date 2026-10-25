@@ -61,6 +61,7 @@ class EditorLayout:
         try:
             profiles = settings_section(ROOT, 'mods', list)
             self.defs, self.category_names, conflicts = merge_mod_assets(self.base_definitions, self.base_categories, profiles, icons)
+            self.character_sizes = load_sizes(resources, profiles)
             self.mod_profiles = profiles
         except Exception as exc:
             root.after_idle(lambda detail=str(exc): messagebox.showwarning(tr('mod_assets_unavailable'), tr('using_vanilla_assets', value0=detail)))

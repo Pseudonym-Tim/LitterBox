@@ -9,7 +9,7 @@ from tkinter import filedialog, ttk, font
 
 from app.litterbox_format import uint
 from app.litterbox_language import tr
-from app.litterbox_metadata import discover_mod_assets, merge_mod_assets
+from app.litterbox_metadata import discover_mod_assets, merge_mod_assets, load_sizes
 from app.litterbox_config import ROOT, read_settings, save_settings, update_settings
 from app.litterbox_metadata import preserve_entry_comments
 from app.litterbox_resources import find_archive, refresh_vanilla
@@ -147,7 +147,9 @@ def askyesnocancel(title, message, *, parent=None):
 class EditorDialogs:
     def set_mod_profiles(self, profiles):
         definitions, categories, conflicts = merge_mod_assets(self.base_definitions, self.base_categories, profiles, self.icons)
+        character_sizes = load_sizes(self.resources, profiles)
         update_settings(ROOT, 'mods', profiles)
+        self.character_sizes = character_sizes
         self.mod_profiles = profiles
         self.defs = definitions
         self.category_names = categories

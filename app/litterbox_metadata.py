@@ -309,8 +309,8 @@ def discover_mod_assets(folder):
 
 def tokens(path):
     text = path.read_text(encoding='utf-8-sig')
-    text = re.sub(r'//[^\n]*|#[^\n]*', '', text)
-    return re.findall(r'"(?:\\.|[^"\\])*"|[{}\[\]]|[^\s{}\[\],]+', text)
+    parts = re.findall(r'"(?:\\.|[^"\\])*"|/\*[\s\S]*?\*/|//[^\n]*|\#[^\n]*|[{}\[\]]|[^\s{}\[\],]+', text)
+    return [part for part in parts if not part.startswith(('//', '#', '/*'))]
 
 def fields(items):
     result = {}
@@ -338,10 +338,18 @@ def fields(items):
 
     return result
 
-def load_sizes(resources):
+def load_sizes(resources, profiles=()):
     definitions = {}
+    directories = [Path(resources) / 'data/characters']
 
-    for path in sorted((Path(resources) / 'data/characters').glob('*.gon')):
+    # Read each mod once...
+    for folder in dict.fromkeys(mod_folder_path(profile).resolve() for profile in profiles):
+        data = folder / 'data' if (folder / 'data').is_dir() else folder
+        directories.append(data / 'characters')
+
+    paths = [path for directory in directories for suffix in ('', '.append', '.patch') for path in sorted(directory.rglob('*.gon' + suffix))]
+
+    for path in paths:
         items = tokens(path)
         i = 0
 
@@ -359,7 +367,21 @@ def load_sizes(resources):
                 depth += (items[i] == '{') - (items[i] == '}')
                 i += 1
 
-            definitions[name] = fields(items[start:i - 1])
+            definition = fields(items[start:i - 1])
+            props = definition.get('properties', [])
+            footprint = {}
+
+            if 'variant_of' in definition:
+                footprint['variant_of'] = definition['variant_of'].strip('"')
+
+            if isinstance(props, list) and 'size' in fields(props):
+                footprint['size'] = fields(props)['size'].strip('"')
+
+            # A patch that only changes health or whatever shouldn't wipe out the damn size...
+            if path.suffix == '.patch':
+                definitions.setdefault(name, {}).update(footprint)
+            else:
+                definitions[name] = footprint
 
     sizes = {}
 
@@ -373,8 +395,7 @@ def load_sizes(resources):
         definition = definitions.get(name, {})
         parent = definition.get('variant_of')
         size = resolve(parent, seen + (name,)) if isinstance(parent, str) else (1, 1)
-        props = definition.get('properties', [])
-        own = fields(props).get('size') if isinstance(props, list) else None
+        own = definition.get('size')
         match = re.fullmatch(r'(\d+)x(\d+)', own or '')
 
         if match:
