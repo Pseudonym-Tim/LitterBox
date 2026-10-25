@@ -1,6 +1,8 @@
 # LitterBox
 A Mewgenics level editor with built-in mod support, in-game playtesting, and hot reloading!
 
+<img width="960" height="540" alt="image" src="https://github.com/user-attachments/assets/0e1d461a-3878-4d5f-8ab2-91425cd3723a" />
+
 ## Features
 
 - Create, open, and save `.lvl` files.
