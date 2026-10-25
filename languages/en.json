@@ -200,7 +200,6 @@
   "about_disclaimer": "LitterBox is NOT an official tool and is not affiliated with or endorsed by the game's developers. Any levels remain the work of their respective authors!",
   "credits_heading": "Credits:",
   "credit_developer": "Pseudonym_Tim - Creator/Programmer",
-  "credit_logo": "CVS - Editor icon/logo",
   "credit_game": "Special thanks to Edmund McMillen and Tyler Glaiel for creating such an amazing game!",
   "display_hook_too_large": "Display hook exceeds trampoline space!",
   "playtest_note": "NOTE: You can hotload level changes at any time while the game is running!\nSide-by-side mode splits your screen between the editor and game, switching the game to windowed mode!",
