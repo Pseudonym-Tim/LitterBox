@@ -5,14 +5,14 @@ A Mewgenics level editor with built-in mod support, in-game playtesting, and hot
 
 ## Features
 
-- Create, open, and save `.lvl` files.
+- Create, open, and save the game's `.lvl` files.
 - Paint tiles and spawns with placement previews, footprint outlines, and overlap protection.
 - Search by name or ID and filter by category, vanilla content, or a specific mod.
 - Switch between a flat board and an isometric view, with zoom and automatic fitting.
-- Inspect placements to configure weighted random choices, linked rolls, and spawn waves.
-- Load mod definitions and custom editor icons alongside vanilla content.
+- Inspect placements to configure settings such as weighted random choices, linked rolls, and spawn waves.
+- Load custom mod definitions and editor icons (alongside vanilla content).
 - Launch the game directly into a level and hotload any edits while the playtest is running, including unsaved changes!
-- Use optional side-by-side mode to arrange the editor and game alongside eachother for faster iteration.
+- Optional side-by-side mode to arrange the editor and game alongside eachother for faster iteration.
 - Faithful to how the original developer level editor may have functioned!
 
 ## Getting started
