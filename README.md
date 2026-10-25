@@ -15,6 +15,10 @@ A Mewgenics level editor with built-in mod support, in-game playtesting, and hot
 - Optional side-by-side mode to arrange the editor and game alongside eachother for faster iteration.
 - Faithful to how the original developer level editor may have functioned!
 
+## Platform support
+
+LitterBox currently only supports **64-bit Windows only**. I'm not a Linux developer and know very little, besides work I did for [Mewtator](https://github.com/dancomstock/mewtator)! Linux build support is planned for a future release, I just don't have the time or willpower to make it compatible. If anyone wants to, they are welcome to fork this repo and add support and I'll gladly merge and credit them!
+
 ## Getting started
 
 Run `LitterBox.exe`. On first launch, LitterBox looks for your Steam installation of Mewgenics. If it cannot find the game, browse to the folder containing `Mewgenics.exe` and `resources.gpak`.
@@ -25,7 +29,7 @@ Select **New** to start from a blank level layout, or **Load** to open an existi
 
 Choose the "Tiles" or "Spawns" layer, select an entry, and paint it onto the board. 
 
-Switch over to **Inspect** and click on any placement to edit it's settings.
+Switch over to **Inspect** and click on any placement to edit it's settings (weighted random choices, linked rolls, and spawn waves)
 
 ## Controls
 
@@ -36,7 +40,7 @@ Switch over to **Inspect** and click on any placement to edit it's settings.
 | Middle mouse button in Paint mode | Pick a tile or spawn from the board |
 | Left mouse button in Inspect mode | Select a placement for editing |
 | Mouse wheel over the board | Zoom |
-| Ctrl+Z / Ctrl+Y | Undo / redo |
+| Ctrl+Z/Ctrl+Y | Undo/redo |
 | Ctrl+O | Open a level |
 | Ctrl+S | Save |
 | F6 | Start a playtest or hotload changes |
@@ -46,7 +50,7 @@ Switch over to **Inspect** and click on any placement to edit it's settings.
 
 Mod support has been made super streamlined for convenience!
 
-Just open **Mod assets**, choose **Add mod folder**, and locate the mod folder to add. LitterBox automatically finds `spawns.gon` and `tiles.gon` definitions, (including `.gon.append` and `.gon.patch` files) and includes them, it also pulls custom icons for your entries from the mod's `editor_icons` folder if it provides one.
+Just open **Mod assets**, choose **Add mod folder**, and locate the mod folder to add. LitterBox automatically finds vanilla `spawns.gon` and `tiles.gon` definitions, (including modded `.gon.append` and `.gon.patch` files) and includes them, it also pulls custom icons for your entries from the mod's `editor_icons` folder if it provides one.
 
 Example layout:
 
