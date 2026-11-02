@@ -161,7 +161,7 @@
   "wave_placement_label": "Wave {value0} - {value1}{value2}",
   "weather_maps": "Weather: {value0} (maps/{value1})",
   "weight": "Weight",
-  "choice_weights_hint": "Weights set the odds. Empty is a valid choice.",
+  "choice_weights_hint": "Weighting controls the odds/likelyhood, 'empty' is a valid choice!",
   "wave_indicator": "W{value0}",
   "zoom": "Zoom",
   "unsaved_changes": "(Unsaved changes!)",
