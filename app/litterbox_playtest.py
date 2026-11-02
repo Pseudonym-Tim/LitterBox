@@ -118,12 +118,14 @@ class PlaytestSession:
         self.k.OpenProcess.argtypes = [w.DWORD, w.BOOL, w.DWORD]
         self.k.OpenProcess.restype = w.HANDLE
         self.k.GetExitCodeProcess.argtypes = [w.HANDLE, c.POINTER(w.DWORD)]
+        self.k.WaitForSingleObject.argtypes = [w.HANDLE, w.DWORD]
+        self.k.WaitForSingleObject.restype = w.DWORD
         self.k.ReadProcessMemory.argtypes = [w.HANDLE, c.c_void_p, c.c_void_p, c.c_size_t, c.POINTER(c.c_size_t)]
         self.k.WriteProcessMemory.argtypes = self.k.ReadProcessMemory.argtypes
         self.k.CloseHandle.argtypes = [w.HANDLE]
         self.k.TerminateProcess.argtypes = [w.HANDLE, w.UINT]
         # Get permission to read, update and stop our playtest process...
-        self.handle = self.k.OpenProcess(0x1039, False, pid)
+        self.handle = self.k.OpenProcess(0x101039, False, pid)
 
         if not self.handle:
             raise c.WinError(c.get_last_error())
@@ -222,7 +224,16 @@ class PlaytestSession:
     def close(self, terminate=False):
         if self.handle:
             if terminate and self.alive():
-                self.k.TerminateProcess(self.handle, 0)
+                if not self.k.TerminateProcess(self.handle, 0):
+                    raise c.WinError(c.get_last_error())
+
+                # Termination is asynchronous, wait before trying to start the damn game again...
+                result = self.k.WaitForSingleObject(self.handle, 5000)
+                
+                if result == 258:
+                    raise RuntimeError(tr('playtest_still_closing'))
+                if result == 0xffffffff:
+                    raise c.WinError(c.get_last_error())
 
             self.k.CloseHandle(self.handle)
             self.handle = None
