@@ -13,6 +13,7 @@ dist/
 
 # LitterBox generated game resources and playtest previews
 /app/cache/
+/vanilla_levels/
 
 # Local settings (contains machine specific game and mod paths)
 /settings.json

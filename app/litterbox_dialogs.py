@@ -13,7 +13,7 @@ from app.litterbox_language import tr
 from app.litterbox_metadata import discover_mod_assets, merge_mod_assets, load_sizes
 from app.litterbox_config import ROOT, read_settings, save_settings, update_settings
 from app.litterbox_metadata import preserve_entry_comments
-from app.litterbox_resources import find_archive, refresh_vanilla
+from app.litterbox_resources import find_archive, refresh_vanilla, extract_vanilla_levels
 from app.litterbox_playtest import mod_folder_path
 from app.litterbox_ui import BUTTON_ICONS, icon_button, COLORS, icon_image, apply_dark_titlebar, center_window
 
@@ -146,6 +146,67 @@ def askyesnocancel(title, message, *, parent=None):
     return show_message(title, message, parent=parent, kind='warning', choices=choices, cancel=None)
 
 class EditorDialogs:
+    def show_vanilla_levels(self):
+        existing = getattr(self, 'levels_window', None)
+
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            return
+
+        archive = find_archive(read_settings(ROOT))
+
+        if archive is None:
+            showerror(tr('extract_levels'), tr('setup_choose_folder'), parent=self.root)
+            return
+
+        dialog = self.levels_window = tk.Toplevel(self.root)
+        dialog.title(tr('extract_vanilla_levels'))
+        dialog.transient(self.root)
+        dialog.resizable(False, False)
+        frame = ttk.Frame(dialog, padding=20)
+        frame.pack(fill='both', expand=True)
+        ttk.Label(frame, text=tr('extract_vanilla_levels'), font=('Sour Gummy', 14, 'bold')).pack(anchor='w', pady=(0, 10))
+        ttk.Label(frame, text=str(ROOT / 'vanilla_levels'), wraplength=540, justify='left').pack(anchor='w')
+        ttk.Label(frame, text=tr('extract_levels_hint'), wraplength=540, justify='left').pack(anchor='w', pady=(6, 12))
+        progress = ttk.Progressbar(frame, length=540, maximum=100)
+        progress.pack(fill='x')
+        status = ttk.Label(frame, text=tr('extracting_levels'), wraplength=540, justify='left')
+        status.pack(anchor='w', pady=(8, 0))
+        close = icon_button(frame, text=tr('close'), icon='xmark', command=dialog.destroy)
+        close.pack(anchor='e', pady=(12, 0))
+        close.state(['disabled'])
+        dialog.protocol('WM_DELETE_WINDOW', lambda: dialog.destroy() if not close.instate(['disabled']) else None)
+        results = queue.Queue()
+
+        def worker():
+            try:
+                counts = extract_vanilla_levels(ROOT, archive, progress=lambda value, phase, detail='': results.put(('progress', value, detail)))
+                results.put(('done', counts))
+            except Exception as exc:
+                results.put(('error', str(exc)))
+
+        def poll():
+            if not dialog.winfo_exists():
+                return
+            while not results.empty():
+                event = results.get_nowait()
+                if event[0] == 'progress':
+                    progress['value'] = event[1]
+                    status.configure(text=event[2] or tr('extracting_levels'))
+                else:
+                    if event[0] == 'done':
+                        status.configure(text=tr('levels_extracted', value0=event[1][0], value1=event[1][1]), foreground='#7bd88f')
+                    else:
+                        status.configure(text=tr('levels_extract_failed', value0=tr(event[1])), foreground=COLORS['error_fg'])
+                    close.state(['!disabled'])
+                    return
+                
+            dialog.after(50, poll)
+
+        center_window(dialog, self.root)
+        threading.Thread(target=worker, name='Extract vanilla levels', daemon=True).start()
+        dialog.after(50, poll)
+
     def set_mod_profiles(self, profiles):
         definitions, categories, conflicts = merge_mod_assets(self.base_definitions, self.base_categories, profiles, self.icons)
         character_sizes = load_sizes(self.resources, profiles)

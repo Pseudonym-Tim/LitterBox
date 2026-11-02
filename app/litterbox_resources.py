@@ -1,4 +1,4 @@
-"""Find the game archive, maintain GON cache, refresh editable definitions with comment preservation and backups..."""
+"""Find and read the game archive, extract vanilla levels, and refresh cached definitions..."""
 import hashlib
 import os
 import re
@@ -83,10 +83,11 @@ def find_executable(settings):
     executable = archive.parent / 'Mewgenics.exe' if archive else None
     return executable.resolve() if executable is not None and executable.is_file() else None
 
-def read_gon_archive(path, requested=None, progress=None):
+def read_archive(path, requested=None, progress=None):
     """Read entry count, u16 path length, UTF-8 path, u32 size, and raw payloads..."""
     path = Path(path)
     length = path.stat().st_size
+    include = required_gon if requested is None else requested if callable(requested) else lambda name: name in requested
 
     with path.open('rb') as stream:
         def take(count):
@@ -130,10 +131,10 @@ def read_gon_archive(path, requested=None, progress=None):
 
         result = {}
         total = 0
-        selected = sum(name in requested if requested is not None else required_gon(name) for name, size in entries)
+        selected = sum(include(name) for name, size in entries)
 
         for name, size in entries:
-            if (name in requested) if requested is not None else required_gon(name):
+            if include(name):
                 total += size
 
                 if size > 64 * 1024 * 1024 or total > 128 * 1024 * 1024:
@@ -157,6 +158,33 @@ def atomic_write(path, data):
     temporary = path.with_suffix(path.suffix + '.tmp')
     temporary.write_bytes(data)
     os.replace(temporary, path)
+
+def extract_vanilla_levels(root, archive, progress=None):
+    destination = Path(root) / 'vanilla_levels'
+    archive_progress = (lambda value, phase, detail='': progress(value * 0.7, phase, detail)) if progress else None
+    payloads = read_archive(archive, requested=lambda name: name.startswith('levels/') and name.lower().endswith('.lvl'), progress=archive_progress)
+    
+    if not payloads:
+        raise ValueError(tr('archive_levels_missing'))
+
+    copied = skipped = 0
+
+    for index, (name, data) in enumerate(payloads.items()):
+        path = destination / PurePosixPath(name).relative_to('levels')
+        if not path.resolve().is_relative_to(destination.resolve()):
+            raise ValueError(tr('archive_invalid_path'))
+
+        # Don't clobber levels someone already edited in this folder...
+        if path.exists():
+            skipped += 1
+        else:
+            atomic_write(path, data)
+            copied += 1
+
+        if progress:
+            progress(70 + 30 * (index + 1) / len(payloads), 'extracting_levels', name)
+
+    return copied, skipped
 
 def refresh_vanilla(root, archive, baseline=None, preserve_comments=None, progress=None):
     root = Path(root)
@@ -207,7 +235,7 @@ def refresh_vanilla(root, archive, baseline=None, preserve_comments=None, progre
 
     if not all(name in payloads for name in ('data/spawns.gon', 'data/tiles.gon')):
         archive_progress = (lambda value, phase, detail='': progress(25 + value * 0.45, phase, detail)) if progress else None
-        payloads = read_gon_archive(archive, progress=archive_progress)
+        payloads = read_archive(archive, progress=archive_progress)
 
     # (Carry user comments over before replacing old vanilla copies)...
     targets = {}

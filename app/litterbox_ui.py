@@ -19,6 +19,7 @@ COLORS = {
 
 BUTTON_ICONS = {
     'new': 'file', 'open_lvl': 'folder-open', 'save': 'floppy-disk', 'save_as': 'file-export',
+    'extract_levels': 'file-export',
     'mod_assets': 'gear', 'playtest': 'play', 'help': 'info-circle', 'about': 'info-circle', 'undo': 'rotate-left',
     'redo': 'rotate-right', 'fit': 'expand', 'reroll_level_preview': 'arrows-rotate',
     'previous': 'arrow-left', 'next': 'arrow-right', 'edit_choices': 'sliders',

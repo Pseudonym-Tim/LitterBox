@@ -87,6 +87,7 @@ class EditorLayout:
         toolbar_buttons = [
             ('new', self.new),
             ('open_lvl', self.open),
+            ('extract_levels', self.show_vanilla_levels),
             ('save', self.save),
             ('save_as', lambda: self.save(True)),
             ('mod_assets', self.show_mod_assets),

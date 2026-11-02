@@ -233,5 +233,12 @@
   "invalid_cat_act": "Cat act must be 1, 2, or 3!",
   "invalid_difficulty": "Difficulty must be between 0 and 3!",
   "ai_cats": "AI controlled cats",
-  "allow_definitionless_mods": "Allow mods without definitions"
+  "allow_definitionless_mods": "Allow mods without definitions",
+  "extract_levels": "Extract levels",
+  "extract_vanilla_levels": "Extract vanilla levels",
+  "extract_levels_hint": "Copies the game's vanilla .lvl files into the 'vanilla_files' folder at the path shown above, preserving subfolders. Any existing files are kept!",
+  "extracting_levels": "Extracting vanilla levels...",
+  "archive_levels_missing": "No .lvl files were found in the game archive! Uh oh!",
+  "levels_extracted": "Copied {value0} levels. Kept {value1} existing files!",
+  "levels_extract_failed": "Could not extract levels: {value0}"
 }

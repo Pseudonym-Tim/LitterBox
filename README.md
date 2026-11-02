@@ -31,6 +31,8 @@ Choose the "Tiles" or "Spawns" layer, select an entry, and paint it onto the boa
 
 Switch over to **Inspect** and click on any placement to edit it's settings (weighted random choices, linked rolls, and spawn waves)
 
+Use **Extract levels** to copy all vanilla `.lvl` files from the game's `resources.gpak` into `vanilla_levels` beside the editor. Subfolders are preserved, and existing files are kept so edited copies are not overwritten. You can then go ahead and open the extracted levels with **Load**!
+
 ## Controls
 
 | Control | Action |
