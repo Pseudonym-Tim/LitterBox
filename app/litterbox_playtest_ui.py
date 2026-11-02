@@ -310,6 +310,7 @@ class PlaytestControls:
         side_by_side = tk.BooleanVar(value=settings.get('side_by_side', False))
         options = ttk.Frame(frame)
         options.grid(row=7, column=0, columnspan=3, sticky='w')
+        ai_cats = tk.BooleanVar(value=settings.get('ai_cats') is True)
 
         def change_side_by_side():
             try:
@@ -321,6 +322,7 @@ class PlaytestControls:
                 messagebox.showerror(tr('cannot_start_playtest'), tr(str(exc)), parent=dialog)
 
         ttk.Checkbutton(options, text=tr('side_by_side'), variable=side_by_side, command=change_side_by_side, style='Clean.TCheckbutton').pack(side='left')
+        ttk.Checkbutton(options, text=tr('ai_cats'), variable=ai_cats, style='Clean.TCheckbutton').pack(side='left', padx=(16, 0))
         ttk.Label(frame, text=tr('playtest_note'), wraplength=650).grid(row=8, column=0, columnspan=3, sticky='w', pady=(8, 0))
         game_status = ttk.Label(frame, text=tr('game_is_not_running'), foreground=UI_COLORS['error_fg'])
         game_status.grid(row=9, column=0, columnspan=3, sticky='w', pady=(10, 0))
@@ -333,7 +335,7 @@ class PlaytestControls:
                 previews.mkdir(parents=True, exist_ok=True)
                 mod = selected_mod.get() if selected_mod.get() in folders else None
                 weather, reason = detect_weather(self.path, self.resources, mod, tileset.get())
-                configuration = (str(Path(executable.get()).resolve()), mod, tileset.get(), tuple(weather))
+                configuration = (str(Path(executable.get()).resolve()), mod, tileset.get(), tuple(weather), ai_cats.get())
                 chosen_act = cat_acts.index(cat_act.get()) + 1
                 chosen_difficulty = difficulties.index(difficulty.get())
                 session = getattr(self, 'playtest_session', None)
@@ -341,11 +343,12 @@ class PlaytestControls:
                 if session is not None and session.alive() and session.configuration == configuration:
                     session.reload(self.level, chosen_act, chosen_difficulty)
                 else:
+                    staging = Path(tempfile.mkdtemp(prefix='preview_', dir=previews))
+                    prepare_preview(self.level, staging, tileset.get(), weather, chosen_act, chosen_difficulty, ai_cats.get())
+
                     if session is not None:
                         session.close(terminate=True)
 
-                    staging = Path(tempfile.mkdtemp(prefix='preview_', dir=previews))
-                    prepare_preview(self.level, staging, tileset.get(), weather, chosen_act, chosen_difficulty)
                     game_status.configure(text=tr('game_is_booting_up'), foreground=UI_COLORS['warning_fg'])
                     dialog.update_idletasks()
                     self.playtest_pid, self.playtest_remote = launch_playtest(executable.get(), staging, mod)
@@ -359,7 +362,7 @@ class PlaytestControls:
                 return
 
             try:
-                update_settings(ROOT, 'playtest', {'executable': executable.get(), 'mod': mod or '', 'tileset': tileset.get(), 'side_by_side': side_by_side.get(), 'cat_act': chosen_act, 'difficulty': chosen_difficulty})
+                update_settings(ROOT, 'playtest', {'executable': executable.get(), 'mod': mod or '', 'tileset': tileset.get(), 'side_by_side': side_by_side.get(), 'cat_act': chosen_act, 'difficulty': chosen_difficulty, 'ai_cats': ai_cats.get()})
             except OSError:
                 pass
 

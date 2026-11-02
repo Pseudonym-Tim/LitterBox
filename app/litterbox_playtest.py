@@ -376,7 +376,7 @@ def mod_folder_path(profile):
     path = Path(profile.get('spawns') or profile.get('tiles')).parent
     return path.parent if path.name.lower() == 'data' else path
 
-def prepare_preview(level, directory, tileset=None, weather=(), cat_act=1, difficulty=0):
+def prepare_preview(level, directory, tileset=None, weather=(), cat_act=1, difficulty=0, ai_cats=False):
     """Write current level and preview metadata into staging folder"""
 
     weather = validate_weather(weather)
@@ -391,6 +391,15 @@ def prepare_preview(level, directory, tileset=None, weather=(), cat_act=1, diffi
 
         (directory / 'data').mkdir(exist_ok=True)
         (directory / 'data/tilesets.gon.patch').write_text('default_tileset.overwrite ' + json.dumps(tileset) + '\n', encoding='utf-8')
+
+    # Swap brain only in temporary mod, leave the real game shit alone...
+    cat_patch = directory / 'data/characters/player_cat.gon.patch'
+
+    if ai_cats:
+        cat_patch.parent.mkdir(parents=True, exist_ok=True)
+        cat_patch.write_text('PlayerCat { ai { brain GenericBrain } }\n', encoding='utf-8')
+    else:
+        cat_patch.unlink(missing_ok=True)
 
     (directory / 'preview_settings.json').write_text(json.dumps({'weather': weather, 'cat_act': cat_act, 'difficulty': difficulty}, indent=2), encoding='utf-8')
 
