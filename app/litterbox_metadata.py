@@ -285,7 +285,7 @@ def mod_icon_directories(folder):
 
     return [path for path in (folder / 'editor_icons', folder / 'textures/editor_icons', folder / 'data/editor_icons') if path.is_dir()]
 
-def discover_mod_assets(folder):
+def discover_mod_assets(folder, allow_missing=False):
     folder = Path(folder)
 
     if folder.name.lower() == 'data':
@@ -304,6 +304,9 @@ def discover_mod_assets(folder):
 
         if profile['spawns'] or profile['tiles']:
             profiles.append(profile)
+
+    if not profiles and allow_missing and folder.is_dir():
+        profiles.append({'folder': str(folder.resolve()), 'spawns': '', 'tiles': '', 'icons': icons})
 
     return profiles
 

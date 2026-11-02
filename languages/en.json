@@ -86,7 +86,7 @@
   "no_innate_weather_maps": "No innate weather (maps/{value0})",
   "no_match_using_alley": "No match, using alley!",
   "no_matching_map_no_innate_weather": "No matching map, no innate weather",
-  "mod_definitions_missing": "No spawns.gon or tiles.gon files, (including .append/.patch), were found!",
+  "mod_definitions_missing": "No spawns.gon.append or tiles.gon.append files were found! (No .gon and .gon.patch files were found either!)",
   "open_lvl": "Load",
   "overlapping_placement": "Overlapping placement",
   "paint": "Paint",
@@ -232,5 +232,6 @@
   "difficulty_impossible": "Impossible",
   "invalid_cat_act": "Cat act must be 1, 2, or 3!",
   "invalid_difficulty": "Difficulty must be between 0 and 3!",
-  "ai_cats": "AI controlled cats"
+  "ai_cats": "AI controlled cats",
+  "allow_definitionless_mods": "Allow mods without definitions"
 }

@@ -175,17 +175,19 @@ class EditorDialogs:
         dialog = self.mod_window = tk.Toplevel(self.root)
         dialog.title(tr('mod_assets'))
         dialog.transient(self.root)
-        dialog.geometry('740x330')
-        dialog.minsize(640, 280)
+        dialog.geometry('740x370')
+        dialog.minsize(640, 320)
         frame = ttk.Frame(dialog, padding=12)
         frame.pack(fill='both', expand=True)
         frame.columnconfigure(0, weight=1)
-        frame.rowconfigure(2, weight=1)
+        frame.rowconfigure(3, weight=1)
         ttk.Label(frame, text=tr('mod_folder_hint'), font=('Sour Gummy', 12, 'bold'), wraplength=690, justify='left').grid(row=0, column=0, columnspan=3, sticky='w')
         ttk.Label(frame, text=tr('unique_ids_hint'), wraplength=690).grid(row=1, column=0, columnspan=3, sticky='w', pady=(4, 10))
+        allow_missing = tk.BooleanVar(value=False)
+        ttk.Checkbutton(frame, text=tr('allow_definitionless_mods'), variable=allow_missing, style='Clean.TCheckbutton').grid(row=2, column=0, columnspan=3, sticky='w')
         folder_rows = {}
         listing = ttk.Frame(frame)
-        listing.grid(row=2, column=0, columnspan=3, sticky='nsew', pady=10)
+        listing.grid(row=3, column=0, columnspan=3, sticky='nsew', pady=10)
         listing.rowconfigure(0, weight=1)
         listing.columnconfigure(0, weight=1)
         tree = ttk.Treeview(listing, columns=('folder',), show='headings', height=4)
@@ -242,7 +244,7 @@ class EditorDialogs:
             if not folder:
                 return
 
-            profiles = discover_mod_assets(folder)
+            profiles = discover_mod_assets(folder, allow_missing=allow_missing.get())
 
             if not profiles:
                 showerror(tr('no_definitions'), tr('mod_definitions_missing'), parent=dialog)
@@ -252,13 +254,13 @@ class EditorDialogs:
             commit(self.mod_profiles + [profile for profile in profiles if profile not in self.mod_profiles])
 
         buttons = ttk.Frame(frame)
-        buttons.grid(row=3, column=0, columnspan=3, sticky='ew')
+        buttons.grid(row=4, column=0, columnspan=3, sticky='ew')
         icon_button(buttons, text=tr('add_mod_folder'), icon='folder-open', command=add_folder).pack(side='left')
         icon_button(buttons, text=tr('remove_selected'), icon='trash-can', command=remove).pack(side='left', padx=8)
         icon_button(buttons, text=tr('reload_files'), icon='arrows-rotate', command=lambda: commit(self.mod_profiles)).pack(side='left')
         icon_button(buttons, text=tr('close'), icon='xmark', command=dialog.destroy).pack(side='right')
         refresh()
-        center_window(dialog, self.root, width=740, height=330)
+        center_window(dialog, self.root, width=740, height=370)
 
     def show_about(self):
         existing = getattr(self, 'about_window', None)

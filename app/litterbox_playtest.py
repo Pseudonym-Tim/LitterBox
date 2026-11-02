@@ -373,6 +373,9 @@ def bootstrap(image_base, remote_base, weather=(), cat_act=1, difficulty=0):
     return bytes(blob)
 
 def mod_folder_path(profile):
+    if profile.get('folder'):
+        return Path(profile['folder'])
+
     path = Path(profile.get('spawns') or profile.get('tiles')).parent
     return path.parent if path.name.lower() == 'data' else path
 
