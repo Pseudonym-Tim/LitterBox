@@ -73,6 +73,8 @@ Single-line or multiline comments immediately above the numeric spawns or tiles 
 
 Open **Playtest** and choose the mod you want to test the level out for (if applicable, otherwise just use vanilla), then select **Start playtest**. LitterBox will launch the game directly into a temporary copy of the level without requiring you to save your changes first.
 
+Choose **Act 1**, **Act 2**, or **Act 3** cats and set the difficulty to **Normal**, **Hard**, **Crazy**, or **Impossible**. Cat acts use the same generation settings as the game's debug/dev mode. Selections are remembered, and can be updated and applied for the next hotload.
+
 While the playtest is running, use **Hotload changes** or press **F6** to reload your edits. The F6 shortcut also works while you are in-game, and the playtest window does not need to stay open. Hold F6 or use **Stop playtest** to end the session.
 
 Tileset detection uses available map definitions, including those from the selected mod, and falls back to alley when it cannot determine a tileset for whatever reason. You can also specify one manually. Associated map weather is applied when it can be resolved as well.

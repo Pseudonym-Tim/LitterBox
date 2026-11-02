@@ -295,9 +295,21 @@ class PlaytestControls:
         combo.bind('<<ComboboxSelected>>', update_tilesets)
         tile_combo.bind('<<ComboboxSelected>>', choose_tileset)
         update_tilesets()
+        cat_acts = ['cat_act_1', 'cat_act_2', 'cat_act_3']
+        difficulties = ['difficulty_normal', 'difficulty_hard', 'difficulty_crazy', 'difficulty_impossible']
+        saved_act = settings.get('cat_act', 1)
+        saved_difficulty = settings.get('difficulty', 0)
+        cat_act = UIStringVar(value=cat_acts[saved_act - 1] if type(saved_act) is int and saved_act in (1, 2, 3) else cat_acts[0])
+        difficulty = UIStringVar(value=difficulties[saved_difficulty] if type(saved_difficulty) is int and saved_difficulty in range(4) else difficulties[0])
+        ttk.Label(frame, text=tr('playtest_cats')).grid(row=6, column=0, sticky='w', padx=(0, 8), pady=(0, 8))
+        battle_options = ttk.Frame(frame)
+        battle_options.grid(row=6, column=1, columnspan=2, sticky='w', pady=(0, 8))
+        ttk.Combobox(battle_options, textvariable=cat_act, values=translated_values(cat_acts, cat_act), state='readonly', width=12).pack(side='left')
+        ttk.Label(battle_options, text=tr('difficulty')).pack(side='left', padx=(16, 8))
+        ttk.Combobox(battle_options, textvariable=difficulty, values=translated_values(difficulties, difficulty), state='readonly', width=14).pack(side='left')
         side_by_side = tk.BooleanVar(value=settings.get('side_by_side', False))
         options = ttk.Frame(frame)
-        options.grid(row=6, column=0, columnspan=3, sticky='w')
+        options.grid(row=7, column=0, columnspan=3, sticky='w')
 
         def change_side_by_side():
             try:
@@ -309,11 +321,11 @@ class PlaytestControls:
                 messagebox.showerror(tr('cannot_start_playtest'), tr(str(exc)), parent=dialog)
 
         ttk.Checkbutton(options, text=tr('side_by_side'), variable=side_by_side, command=change_side_by_side, style='Clean.TCheckbutton').pack(side='left')
-        ttk.Label(frame, text=tr('playtest_note'), wraplength=650).grid(row=7, column=0, columnspan=3, sticky='w', pady=(8, 0))
+        ttk.Label(frame, text=tr('playtest_note'), wraplength=650).grid(row=8, column=0, columnspan=3, sticky='w', pady=(8, 0))
         game_status = ttk.Label(frame, text=tr('game_is_not_running'), foreground=UI_COLORS['error_fg'])
-        game_status.grid(row=8, column=0, columnspan=3, sticky='w', pady=(10, 0))
+        game_status.grid(row=9, column=0, columnspan=3, sticky='w', pady=(10, 0))
         buttons = ttk.Frame(frame)
-        buttons.grid(row=9, column=0, columnspan=3, sticky='ew', pady=(12, 0))
+        buttons.grid(row=10, column=0, columnspan=3, sticky='ew', pady=(12, 0))
 
         def start():
             try:
@@ -322,16 +334,18 @@ class PlaytestControls:
                 mod = selected_mod.get() if selected_mod.get() in folders else None
                 weather, reason = detect_weather(self.path, self.resources, mod, tileset.get())
                 configuration = (str(Path(executable.get()).resolve()), mod, tileset.get(), tuple(weather))
+                chosen_act = cat_acts.index(cat_act.get()) + 1
+                chosen_difficulty = difficulties.index(difficulty.get())
                 session = getattr(self, 'playtest_session', None)
 
                 if session is not None and session.alive() and session.configuration == configuration:
-                    session.reload(self.level)
+                    session.reload(self.level, chosen_act, chosen_difficulty)
                 else:
                     if session is not None:
                         session.close(terminate=True)
 
                     staging = Path(tempfile.mkdtemp(prefix='preview_', dir=previews))
-                    prepare_preview(self.level, staging, tileset.get(), weather)
+                    prepare_preview(self.level, staging, tileset.get(), weather, chosen_act, chosen_difficulty)
                     game_status.configure(text=tr('game_is_booting_up'), foreground=UI_COLORS['warning_fg'])
                     dialog.update_idletasks()
                     self.playtest_pid, self.playtest_remote = launch_playtest(executable.get(), staging, mod)
@@ -345,7 +359,7 @@ class PlaytestControls:
                 return
 
             try:
-                update_settings(ROOT, 'playtest', {'executable': executable.get(), 'mod': mod or '', 'tileset': tileset.get(), 'side_by_side': side_by_side.get()})
+                update_settings(ROOT, 'playtest', {'executable': executable.get(), 'mod': mod or '', 'tileset': tileset.get(), 'side_by_side': side_by_side.get(), 'cat_act': chosen_act, 'difficulty': chosen_difficulty})
             except OSError:
                 pass
 

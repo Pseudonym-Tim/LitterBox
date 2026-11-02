@@ -220,5 +220,16 @@
   "setup_writing": "Saving vanilla resources...",
   "setup_ready": "Vanilla resources ready. Click Confirm to open the editor!",
   "setup_failed": "Could not prepare the resources: {value0}",
-  "confirm": "Confirm"
+  "confirm": "Confirm",
+  "playtest_cats": "Cats",
+  "cat_act_1": "Act 1",
+  "cat_act_2": "Act 2",
+  "cat_act_3": "Act 3",
+  "difficulty": "Difficulty",
+  "difficulty_normal": "Normal",
+  "difficulty_hard": "Hard",
+  "difficulty_crazy": "Crazy",
+  "difficulty_impossible": "Impossible",
+  "invalid_cat_act": "Cat act must be 1, 2, or 3!",
+  "invalid_difficulty": "Difficulty must be between 0 and 3!"
 }

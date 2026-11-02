@@ -200,15 +200,23 @@ class PlaytestSession:
         if not self.k.WriteProcessMemory(self.handle, self.remote + offset, data, 4, c.byref(done)) or done.value != 4:
             raise c.WinError(c.get_last_error())
 
-    def reload(self, level):
+    def reload(self, level, cat_act=None, difficulty=None):
         if not self.ready():
             raise RuntimeError(tr('playtest_still_loading'))
+
+        if cat_act is not None or difficulty is not None:
+            validate_battle_options(cat_act, difficulty)
 
         path = self.staging / 'levels/litterbox_preview.lvl'
         temporary = path.with_suffix('.tmp')
         temporary.write_bytes(level.encode())
         # Finish saving the preview before telling the game to reload it...
         os.replace(temporary, path)
+
+        if cat_act is not None or difficulty is not None:
+            self.write_command(0x940, (cat_act - 1) * 2)
+            self.write_command(0x944, difficulty)
+
         self.write_command(0x910, 1)
 
     def close(self, terminate=False):
@@ -223,8 +231,10 @@ class PlaytestSession:
         if getattr(self, 'handle', None):
             self.close()
 
-def bootstrap(image_base, remote_base, weather=()):
+def bootstrap(image_base, remote_base, weather=(), cat_act=1, difficulty=0):
     """Build startup hook that sends the game straight into test battle..."""
+
+    validate_battle_options(cat_act, difficulty)
 
     # Save the game state we need before running our battle setup...
     code = bytearray.fromhex('53 56 57 48 83 ec 60 48 89 cb')
@@ -240,6 +250,13 @@ def bootstrap(image_base, remote_base, weather=()):
 
     # Enable the normal combat test settings and use act 1...
     emit('c6 83 8d 07 00 00 01 c6 83 80 07 00 00 01 c7 83 dc 06 00 00 01 00 00 00')
+
+    # Read chosen "cat act" setting and difficulty again on every hotload...
+    emit('49 bb')
+    code.extend(struct.pack('<Q', remote_base + 0x940))
+    emit('41 8b 03 89 83 84 07 00 00 41 8b 43 04 48 8b 8b a8 05 00 00')
+    # Match combat test menu's difficulty values for all three acts...
+    emit('89 81 10 04 00 00 89 81 28 04 00 00 89 81 40 04 00 00')
 
     # Remember the game director so we can reload later...
     emit('49 bb')
@@ -320,6 +337,7 @@ def bootstrap(image_base, remote_base, weather=()):
     blob += bytes(0x840 - len(blob)) + b'litterbox_preview\0'
     # Leave room for the editor and game to exchange requests...
     blob += bytes(0xa00 - len(blob))
+    struct.pack_into('<II', blob, 0x940, (cat_act - 1) * 2, difficulty)
     records = bytearray()
     strings = bytearray()
     # Keep weather names after the list of game strings...
@@ -347,10 +365,11 @@ def mod_folder_path(profile):
     path = Path(profile.get('spawns') or profile.get('tiles')).parent
     return path.parent if path.name.lower() == 'data' else path
 
-def prepare_preview(level, directory, tileset=None, weather=()):
+def prepare_preview(level, directory, tileset=None, weather=(), cat_act=1, difficulty=0):
     """Write current level and preview metadata into staging folder"""
 
     weather = validate_weather(weather)
+    validate_battle_options(cat_act, difficulty)
     directory = Path(directory)
     (directory / 'levels').mkdir(parents=True, exist_ok=True)
     (directory / 'levels/litterbox_preview.lvl').write_bytes(level.encode())
@@ -362,9 +381,16 @@ def prepare_preview(level, directory, tileset=None, weather=()):
         (directory / 'data').mkdir(exist_ok=True)
         (directory / 'data/tilesets.gon.patch').write_text('default_tileset.overwrite ' + json.dumps(tileset) + '\n', encoding='utf-8')
 
-    (directory / 'preview_settings.json').write_text(json.dumps({'weather': weather}, indent=2), encoding='utf-8')
+    (directory / 'preview_settings.json').write_text(json.dumps({'weather': weather, 'cat_act': cat_act, 'difficulty': difficulty}, indent=2), encoding='utf-8')
 
     return directory
+
+def validate_battle_options(cat_act, difficulty):
+    if type(cat_act) is not int or cat_act not in (1, 2, 3):
+        raise ValueError(tr('invalid_cat_act'))
+
+    if type(difficulty) is not int or difficulty not in (0, 1, 2, 3):
+        raise ValueError(tr('invalid_difficulty'))
 
 def validate_weather(weather):
     if not isinstance(weather, (list, tuple)) or any(not isinstance(name, str) or not name or any(ch in name for ch in '\r\n\x00') for name in weather):
@@ -459,8 +485,10 @@ def launch(exe, staging, mod_folder=None):
     settings_path = staging / 'preview_settings.json'
     settings = json.loads(settings_path.read_text(encoding='utf-8')) if settings_path.exists() else {}
     weather = validate_weather(settings.get('weather', ()))
+    cat_act = settings.get('cat_act', 1)
+    difficulty = settings.get('difficulty', 0)
     # Work out how much game memory our code and preview data need...
-    payload_size = len(bootstrap(0, 0, weather)) + 0x1000
+    payload_size = len(bootstrap(0, 0, weather, cat_act, difficulty)) + 0x1000
     args = launch_arguments(exe, staging, mod_folder)
     env = os.environ.copy()
     env.update(SteamAppId='686060', SteamGameId='686060')
@@ -549,7 +577,7 @@ def launch(exe, staging, mod_folder=None):
         if not remote:
             raise c.WinError(c.get_last_error())
 
-        payload = bootstrap(image_base, remote, weather)
+        payload = bootstrap(image_base, remote, weather, cat_act, difficulty)
         write(remote, payload)
         frame_address = image_base + 0x9b83f0
         # Keep the instructions our hotload hook will replace...
