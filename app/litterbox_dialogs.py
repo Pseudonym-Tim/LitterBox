@@ -4,6 +4,7 @@ import queue
 import threading
 import time
 from pathlib import Path
+from PIL import Image, ImageTk
 from app.version import APP_VERSION_DISPLAY, versioned_title
 from tkinter import filedialog, ttk, font
 
@@ -274,9 +275,16 @@ class EditorDialogs:
         dialog.resizable(False, False)
         frame = ttk.Frame(dialog, padding=(28, 24))
         frame.pack(fill='both', expand=True)
-        ttk.Label(frame, text=tr('litterbox'), font=('Sour Gummy', 24, 'bold')).pack(anchor='w')
-        ttk.Label(frame, text=tr('mewgenics_level_editor'), font=('Sour Gummy', 14, 'bold'), foreground=COLORS['muted_fg']).pack(anchor='w', pady=(2, 4))
-        ttk.Label(frame, text=tr('version_label', value0=APP_VERSION_DISPLAY), foreground=COLORS['muted_fg']).pack(anchor='w', pady=(0, 18))
+        heading = ttk.Frame(frame)
+        heading.pack(fill='x', pady=(0, 18))
+        with Image.open(ROOT / 'assets/icons/litterbox.png') as image:
+            dialog.about_icon = ImageTk.PhotoImage(image.resize((150, 150), Image.Resampling.LANCZOS), master=dialog)
+        ttk.Label(heading, image=dialog.about_icon).pack(side='left', padx=(0, 16))
+        title = ttk.Frame(heading)
+        title.pack(side='left')
+        ttk.Label(title, text=tr('litterbox'), font=('Sour Gummy', 24, 'bold')).pack(anchor='w')
+        ttk.Label(title, text=tr('mewgenics_level_editor'), font=('Sour Gummy', 14, 'bold'), foreground=COLORS['muted_fg']).pack(anchor='w', pady=(2, 4))
+        ttk.Label(title, text=tr('version_label', value0=APP_VERSION_DISPLAY), foreground=COLORS['muted_fg']).pack(anchor='w')
         ttk.Label(frame, text=tr('about_description'), wraplength=500, justify='left').pack(anchor='w', pady=(0, 22))
         ttk.Label(frame, text=tr('about_disclaimer'), wraplength=500, justify='left', foreground=COLORS['muted_fg']).pack(anchor='w', pady=(0, 22))
         ttk.Separator(frame, orient='horizontal').pack(fill='x', pady=(0, 18))
