@@ -10,7 +10,7 @@ from tkinter import filedialog, ttk, font
 
 from app.litterbox_format import uint
 from app.litterbox_language import tr
-from app.litterbox_metadata import discover_mod_assets, merge_mod_assets, load_sizes
+from app.litterbox_metadata import discover_mod_assets, merge_mod_assets, load_sizes, detect_mods_folder, auto_mod_profiles
 from app.litterbox_config import ROOT, read_settings, save_settings, update_settings
 from app.litterbox_metadata import preserve_entry_comments
 from app.litterbox_resources import find_archive, refresh_vanilla, extract_vanilla_levels
@@ -236,19 +236,27 @@ class EditorDialogs:
         dialog = self.mod_window = tk.Toplevel(self.root)
         dialog.title(tr('mod_assets'))
         dialog.transient(self.root)
-        dialog.geometry('740x370')
-        dialog.minsize(640, 320)
+        dialog.geometry('740x440')
+        dialog.minsize(640, 390)
         frame = ttk.Frame(dialog, padding=12)
         frame.pack(fill='both', expand=True)
         frame.columnconfigure(0, weight=1)
-        frame.rowconfigure(3, weight=1)
+        frame.rowconfigure(5, weight=1)
         ttk.Label(frame, text=tr('mod_folder_hint'), font=('Sour Gummy', 12, 'bold'), wraplength=690, justify='left').grid(row=0, column=0, columnspan=3, sticky='w')
         ttk.Label(frame, text=tr('unique_ids_hint'), wraplength=690).grid(row=1, column=0, columnspan=3, sticky='w', pady=(4, 10))
-        allow_missing = tk.BooleanVar(value=False)
-        ttk.Checkbutton(frame, text=tr('allow_definitionless_mods'), variable=allow_missing, style='Clean.TCheckbutton').grid(row=2, column=0, columnspan=3, sticky='w')
+        settings = read_settings(ROOT)
+        discovery = settings.get('mod_discovery', {})
+        allow_missing = tk.BooleanVar(value=discovery.get('allow_missing', False))
+        automatic = tk.BooleanVar(value=discovery.get('enabled', False))
+        detected = detect_mods_folder(settings)
+        mods_folder = tk.StringVar(value=str(detected) if detected else discovery.get('folder', ''))
+        ttk.Checkbutton(frame, text=tr('allow_definitionless_mods'), variable=allow_missing, command=lambda: reload_mods(), style='Clean.TCheckbutton').grid(row=2, column=0, columnspan=3, sticky='w')
+        ttk.Checkbutton(frame, text=tr('auto_add_mods'), variable=automatic, command=lambda: change_automatic(), style='Clean.TCheckbutton').grid(row=3, column=0, columnspan=3, sticky='w', pady=(4, 4))
+        ttk.Entry(frame, textvariable=mods_folder, state='readonly').grid(row=4, column=0, columnspan=2, sticky='ew')
+        icon_button(frame, text=tr('browse'), icon='folder-open', command=lambda: browse_mods()).grid(row=4, column=2, sticky='e', padx=(8, 0))
         folder_rows = {}
         listing = ttk.Frame(frame)
-        listing.grid(row=3, column=0, columnspan=3, sticky='nsew', pady=10)
+        listing.grid(row=5, column=0, columnspan=3, sticky='nsew', pady=10)
         listing.rowconfigure(0, weight=1)
         listing.columnconfigure(0, weight=1)
         tree = ttk.Treeview(listing, columns=('folder',), show='headings', height=4)
@@ -296,6 +304,38 @@ class EditorDialogs:
             if selected:
                 commit([profile for index, profile in enumerate(self.mod_profiles) if index not in selected])
 
+        def reload_mods():
+            options = {'enabled': automatic.get(), 'folder': mods_folder.get(), 'allow_missing': allow_missing.get()}
+            update_settings(ROOT, 'mod_discovery', options)
+            try:
+                profiles = auto_mod_profiles(read_settings(ROOT), self.mod_profiles)
+            except OSError as exc:
+                showerror(tr('cannot_load_mod_assets'), str(exc), parent=dialog)
+                return
+            
+            commit(profiles)
+
+        def browse_mods():
+            folder = filedialog.askdirectory(parent=dialog, title=tr('choose_mods_folder'), initialdir=mods_folder.get() or ROOT)
+            if not folder:
+                return False
+            mods_folder.set(folder)
+            reload_mods()
+
+            return True
+
+        def change_automatic():
+            if automatic.get() and not mods_folder.get():
+                detected = detect_mods_folder(read_settings(ROOT))
+                if detected:
+                    mods_folder.set(str(detected))
+            if automatic.get() and (not mods_folder.get() or not Path(mods_folder.get()).is_dir()):
+                if browse_mods():
+                    return
+                automatic.set(False)
+                
+            reload_mods()
+
         def add_folder():
             folder = filedialog.askdirectory(parent=dialog, title=tr('choose_mod_folder'), initialdir=self.picker_directory('mods', ROOT))
 
@@ -315,13 +355,13 @@ class EditorDialogs:
             commit(self.mod_profiles + [profile for profile in profiles if profile not in self.mod_profiles])
 
         buttons = ttk.Frame(frame)
-        buttons.grid(row=4, column=0, columnspan=3, sticky='ew')
+        buttons.grid(row=6, column=0, columnspan=3, sticky='ew')
         icon_button(buttons, text=tr('add_mod_folder'), icon='folder-open', command=add_folder).pack(side='left')
         icon_button(buttons, text=tr('remove_selected'), icon='trash-can', command=remove).pack(side='left', padx=8)
-        icon_button(buttons, text=tr('reload_files'), icon='arrows-rotate', command=lambda: commit(self.mod_profiles)).pack(side='left')
+        icon_button(buttons, text=tr('reload_files'), icon='arrows-rotate', command=reload_mods).pack(side='left')
         icon_button(buttons, text=tr('close'), icon='xmark', command=dialog.destroy).pack(side='right')
         refresh()
-        center_window(dialog, self.root, width=740, height=370)
+        center_window(dialog, self.root, width=740, height=440)
 
     def show_about(self):
         existing = getattr(self, 'about_window', None)

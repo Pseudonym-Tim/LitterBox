@@ -4,10 +4,10 @@ import tkinter as tk
 from tkinter import ttk
 
 from app import litterbox_dialogs as messagebox
-from app.litterbox_metadata import load_sizes, category_names, merge_mod_assets, palette, preserve_entry_comments
+from app.litterbox_metadata import load_sizes, category_names, merge_mod_assets, palette, preserve_entry_comments, auto_mod_profiles
 from app.litterbox_format import Level
 from app.litterbox_language import UIStringVar, load_language, tr, translated_values
-from app.litterbox_config import ROOT, read_settings, settings_section
+from app.litterbox_config import ROOT, read_settings, settings_section, update_settings
 from app.version import versioned_title
 from app.litterbox_resources import find_archive, refresh_vanilla
 from app.litterbox_ui import BUTTON_ICONS, COLORS as UI_COLORS, apply_dark_theme, configure_app_window, icon_button, icon_image
@@ -60,9 +60,14 @@ class EditorLayout:
 
         try:
             profiles = settings_section(ROOT, 'mods', list)
-            self.defs, self.category_names, conflicts = merge_mod_assets(self.base_definitions, self.base_categories, profiles, icons)
-            self.character_sizes = load_sizes(resources, profiles)
-            self.mod_profiles = profiles
+            discovered = auto_mod_profiles(read_settings(ROOT), profiles)
+            self.defs, self.category_names, conflicts = merge_mod_assets(self.base_definitions, self.base_categories, discovered, icons)
+            self.character_sizes = load_sizes(resources, discovered)
+            self.mod_profiles = discovered
+
+            if discovered != profiles:
+                update_settings(ROOT, 'mods', discovered)
+                
         except Exception as exc:
             root.after_idle(lambda detail=str(exc): messagebox.showwarning(tr('mod_assets_unavailable'), tr('using_vanilla_assets', value0=detail)))
 

@@ -312,6 +312,14 @@ class PlaytestControls:
         options.grid(row=7, column=0, columnspan=3, sticky='w')
         ai_cats = tk.BooleanVar(value=settings.get('ai_cats') is True)
 
+        def remember_battle_options(*args):
+            saved = settings_section(ROOT, 'playtest')
+            saved.update(cat_act=cat_acts.index(cat_act.get()) + 1, difficulty=difficulties.index(difficulty.get()), ai_cats=ai_cats.get())
+            update_settings(ROOT, 'playtest', saved)
+
+        for variable in (cat_act, difficulty, ai_cats):
+            variable.trace_add('write', remember_battle_options)
+
         def change_side_by_side():
             try:
                 self.set_side_by_side(side_by_side.get())

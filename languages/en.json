@@ -240,5 +240,7 @@
   "extracting_levels": "Extracting vanilla levels...",
   "archive_levels_missing": "No .lvl files were found in the game archive! Uh oh!",
   "levels_extracted": "Copied {value0} levels. Kept {value1} existing files!",
-  "levels_extract_failed": "Could not extract levels: {value0}"
+  "levels_extract_failed": "Could not extract levels: {value0}",
+  "auto_add_mods": "Auto-add mods",
+  "choose_mods_folder": "Choose the folder containing your mods!"
 }

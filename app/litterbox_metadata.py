@@ -5,6 +5,7 @@ from pathlib import Path
 
 from app.litterbox_language import tr
 from app.litterbox_playtest import mod_folder_path
+from app.litterbox_resources import find_executable
 
 _ENTRY_TOKENS = re.compile(r'"(?:\\.|[^"\\])*"|//[^\n]*|\#[^\n]*|/\*[\s\S]*?\*/|[{}]|[^\s{}]+?(?=\s|[{}]|$)')
 
@@ -309,6 +310,53 @@ def discover_mod_assets(folder, allow_missing=False):
         profiles.append({'folder': str(folder.resolve()), 'spawns': '', 'tiles': '', 'icons': icons})
 
     return profiles
+
+def detect_mods_folder(settings):
+    options = settings.get('mod_discovery', {})
+    candidates = [Path(options['folder'])] if options.get('folder') else []
+
+    for profile in settings.get('mods', []):
+        parent = mod_folder_path(profile).parent
+        if parent.name.lower() == 'mods':
+            candidates.append(parent)
+
+    last = settings.get('file_picker', {}).get('mods')
+
+    if last:
+        path = Path(last)
+        candidates.extend(path for path in (path, path.parent) if path.name.lower() == 'mods')
+
+    executable = find_executable(settings)
+    if executable:
+        candidates.append(executable.parent / 'mods')
+
+    return next((path.resolve() for path in candidates if path.is_dir()), None)
+
+def auto_mod_profiles(settings, profiles):
+    options = settings.get('mod_discovery', {})
+
+    if not options.get('enabled'):
+        return profiles
+
+    folder = detect_mods_folder(settings)
+    
+    if folder is None:
+        return profiles
+
+    result = list(profiles)
+    known = {mod_folder_path(profile).resolve() for profile in profiles}
+
+    # Only look at direct children, don't wander through every fuckin mod's subfolders...
+    for child in sorted(folder.iterdir(), key=lambda path: path.name.casefold()):
+        if child.name.casefold() == '_unpacked': # (Make sure we handle any old Mewtator version generated extracted resource folder)
+            continue
+        if child.is_dir() and child.resolve() not in known:
+            found = discover_mod_assets(child, allow_missing=options.get('allow_missing', False))
+            result.extend(found)
+            if found:
+                known.add(child.resolve())
+
+    return result
 
 def tokens(path):
     text = path.read_text(encoding='utf-8-sig')
